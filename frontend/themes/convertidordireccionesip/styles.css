@@ -1,0 +1,12 @@
+@import url('./main-layout.css');
+@import url('./views/pagina-principal-view.css');
+@import url('./views/nosotros-view.css');
+@import url('@fontsource/nokora/index.css');    html {
+      --lumo-primary-color: hsla(99, 41%, 74%, 0.86);
+      --lumo-primary-color-50pct: hsla(99, 41%, 74%, 0.5);
+      --lumo-primary-color-10pct: hsla(99, 41%, 74%, 0.1);
+      --lumo-primary-text-color: hsla(134, 68%, 37%, 0.82);
+      --lumo-success-text-color: hsla(145, 100%, 32%, 0.41);
+--lumo-font-family: Nokora;
+
+    }

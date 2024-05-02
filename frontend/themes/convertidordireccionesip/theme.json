@@ -1,0 +1,9 @@
+{
+  "lumoImports" : [ "typography", "color", "spacing", "badge", "utility" ],
+  "assets" : {
+    "@fontsource/nokora" : {
+      "*.css" : "@fontsource/nokora",
+      "files/*" : "@fontsource/nokora/files"
+    }
+  }
+}
