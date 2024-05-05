@@ -6,93 +6,100 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.Uses;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Hr;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-@PageTitle("Pagina Principal")
+@PageTitle("Página Principal")
 @Route(value = "", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
 @Uses(Icon.class)
 public class PaginaPrincipalView extends Composite<VerticalLayout> {
 
     public PaginaPrincipalView() {
-        HorizontalLayout layoutRow = new HorizontalLayout();
-        H2 h2 = new H2();
-        Hr hr = new Hr();
-        VerticalLayout layoutColumn2 = new VerticalLayout();
-        TextField textField = new TextField();
-        FormLayout formLayout2Col = new FormLayout();
-        ComboBox comboBox = new ComboBox();
-        Button buttonPrimary = new Button();
-        VerticalLayout layoutColumn3 = new VerticalLayout();
-        Hr hr2 = new Hr();
-        Button buttonPrimary2 = new Button();
-        getContent().setWidth("100%");
-        getContent().getStyle().set("flex-grow", "1");
-        getContent().setJustifyContentMode(JustifyContentMode.CENTER);
-        getContent().setAlignItems(Alignment.CENTER);
-        layoutRow.addClassName(Gap.MEDIUM);
-        layoutRow.setWidth("100%");
-        layoutRow.setHeight("min-content");
-        h2.setText("Bienvenido al convertidor de direcciónes IP");
-        layoutRow.setAlignSelf(FlexComponent.Alignment.CENTER, h2);
-        h2.setWidth("max-content");
-        layoutColumn2.setWidth("100%");
-        layoutColumn2.getStyle().set("flex-grow", "1");
-        textField.setLabel("Ingresa la direccion IP");
-        textField.setWidth("min-content");
-        formLayout2Col.setWidth("100%");
-        comboBox.setLabel("Tipo de Conversión");
-        comboBox.setWidth("min-content");
-        setComboBoxSampleData(comboBox);
-        buttonPrimary.setText("Convertir");
-        buttonPrimary.setWidth("min-content");
-        buttonPrimary.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        layoutColumn3.setWidthFull();
-        layoutColumn2.setFlexGrow(1.0, layoutColumn3);
-        layoutColumn3.setWidth("100%");
-        layoutColumn3.getStyle().set("flex-grow", "1");
-        buttonPrimary2.setText("Nosostros");
-        layoutColumn2.setAlignSelf(FlexComponent.Alignment.END, buttonPrimary2);
-        buttonPrimary2.setWidth("min-content");
-        buttonPrimary2.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        getContent().add(layoutRow);
-        layoutRow.add(h2);
-        getContent().add(hr);
-        getContent().add(layoutColumn2);
-        layoutColumn2.add(textField);
-        layoutColumn2.add(formLayout2Col);
-        formLayout2Col.add(comboBox);
-        formLayout2Col.add(buttonPrimary);
-        layoutColumn2.add(layoutColumn3);
-        layoutColumn2.add(hr2);
-        layoutColumn2.add(buttonPrimary2);
+        VerticalLayout contenido = getContent();
+        contenido.setSizeFull();
+        contenido.setAlignItems(FlexComponent.Alignment.START);
+        contenido.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
+
+        H2 title = new H2("Bienvenido al convertidor de direcciones IP");
+        TextField ipInput = new TextField("Ingrese una dirección IP");
+        ipInput.setPlaceholder("Ejemplo: 192.168.1.1");
+
+        ComboBox<String> conversionType = new ComboBox<>("Tipo de Conversión");
+        conversionType.setItems("Binario", "Decimal", "Hexadecimal");
+        conversionType.setPlaceholder("Selecciona el tipo");
+
+        TextArea resultArea = new TextArea("Resultado");
+        resultArea.setWidth("300px");
+        resultArea.setReadOnly(true);
+
+        Button convertButton = new Button("Convertir", e -> convertirDireccionIP(ipInput.getValue(), conversionType.getValue(), resultArea));
+        convertButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.addFormItem(ipInput, "Dirección IP");
+        formLayout.addFormItem(conversionType, "Tipo de Conversión");
+        formLayout.addFormItem(convertButton, "");
+        formLayout.addFormItem(resultArea, "Resultado de la Conversión");
+
+        contenido.add(title, new Hr(), formLayout);
     }
 
-    record SampleItem(String value, String label, Boolean disabled) {
+    private void convertirDireccionIP(String ip, String tipoConversion, TextArea resultArea) {
+        if (ip.isEmpty() || tipoConversion == null) {
+            resultArea.setValue("Por favor complete todos los campos.");
+            return;
+        }
+        try {
+            InetAddress inetAddress = InetAddress.getByName(ip);
+            byte[] bytes = inetAddress.getAddress();
+            String resultado = switch (tipoConversion) {
+                case "Binario" -> convertirABinario(bytes);
+                case "Decimal" -> convertirADecimal(bytes);
+                case "Hexadecimal" -> convertirAHexadecimal(bytes);
+                default -> "Tipo de conversión no soportado.";
+            };
+            resultArea.setValue(resultado);
+            Dialog dialog = new Dialog();
+            dialog.add(new Label("La conversión a " + tipoConversion + " se ha realizado exitosamente."));
+            dialog.open();
+        } catch (UnknownHostException e) {
+            resultArea.setValue("Dirección IP no válida.");
+        }
     }
 
-    private void setComboBoxSampleData(ComboBox comboBox) {
-        List<SampleItem> sampleItems = new ArrayList<>();
-        sampleItems.add(new SampleItem("first", "First", null));
-        sampleItems.add(new SampleItem("second", "Second", null));
-        sampleItems.add(new SampleItem("third", "Third", Boolean.TRUE));
-        sampleItems.add(new SampleItem("fourth", "Fourth", null));
-        comboBox.setItems(sampleItems);
-        comboBox.setItemLabelGenerator(item -> ((SampleItem) item).label());
+    private String convertirABinario(byte[] bytes) {
+        return IntStream.range(0, bytes.length)
+                .mapToObj(i -> String.format("%8s", Integer.toBinaryString(bytes[i] & 0xFF)).replace(' ', '0'))
+                .collect(Collectors.joining("."));
+    }
+
+    private String convertirADecimal(byte[] bytes) {
+        long resultado = 0;
+        for (int i = 0; i < bytes.length; i++) {
+            resultado = (resultado << 8) + (bytes[i] & 0xFF);
+        }
+        return String.valueOf(resultado);
+    }
+
+    private String convertirAHexadecimal(byte[] bytes) {
+        return IntStream.range(0, bytes.length)
+                .mapToObj(i -> String.format("%02X", bytes[i]))
+                .collect(Collectors.joining("."));
     }
 }
